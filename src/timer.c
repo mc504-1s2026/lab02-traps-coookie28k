@@ -5,8 +5,6 @@
 #include <kernel/trap.h>
 #include <kernel/serial.h>
 
-volatile u64 uptime_seconds = 0;
-volatile u64 alarm_target_second = 0;
 volatile bool alarm_active = false;
 
 u64 timer_read()
@@ -20,7 +18,7 @@ void timer_irq_enable()
 
 	hart_irq_enable();
 
-	timer_set_alarm(1);
+	csr_write(CSR_STIMECMP, -1ULL);
 }
 
 void timer_irq_disable()
@@ -30,6 +28,7 @@ void timer_irq_disable()
 
 void timer_set_alarm(u64 secs)
 {
+	alarm_active = true;
 	u64 next = timer_read() + secs * TIMER_FREQ;
 
 	csr_write(CSR_STIMECMP, next);
@@ -37,15 +36,10 @@ void timer_set_alarm(u64 secs)
 
 void timer_irq()
 {
-	uptime_seconds++;
-
-	if (alarm_active &&
-	    uptime_seconds >= alarm_target_second) {
-
+	if (alarm_active) {
 		serial_puts("alarm\n");
-
 		alarm_active = false;
 	}
-
-	timer_set_alarm(1);
+	
+	csr_write(CSR_STIMECMP, -1ULL);
 }
