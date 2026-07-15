@@ -3,6 +3,7 @@
 #include <arch/csr.h>
 #include <kernel/printf.h>
 #include <kernel/trap.h>
+#include <kernel/serial.h>
 
 volatile u64 uptime_seconds = 0;
 volatile u64 alarm_target_second = 0;
@@ -41,7 +42,7 @@ void timer_irq()
 	if (alarm_active &&
 	    uptime_seconds >= alarm_target_second) {
 
-		print("alarm\n");
+		serial_puts("alarm\n");
 
 		alarm_active = false;
 	}
